@@ -15,7 +15,7 @@ import (
 
 // Go 程序的默认入口函数。阅读项目代码的入口函数.
 func main() {
-	command := app.NewFastGoCommand()
+	command := app.NewFastGOCommand()
 	if err := command.Execute(); err != nil {
 		os.Exit(1)
 	}
