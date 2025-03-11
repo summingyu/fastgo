@@ -6,9 +6,17 @@
 
 package main
 
-import "fmt"
+import (
+	"os"
+
+	"github.com/onexstack/fastgo/cmd/fg-apiserver/app"
+	_ "go.uber.org/automaxprocs"
+)
 
 // Go 程序的默认入口函数。阅读项目代码的入口函数.
 func main() {
-	fmt.Println("Hello World!")
+	command := app.NewFastGoCommand()
+	if err := command.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
