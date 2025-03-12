@@ -18,4 +18,4 @@ mysql:
 log:
   format: text
   level: info
-  output: stdout
+  output: log/fg-apiserver.log
