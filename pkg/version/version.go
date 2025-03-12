@@ -45,7 +45,7 @@ func (info Info) String() string {
 }
 
 func (info Info) ToJSON() string {
-	s, _ := json.Marshal(info)
+	s, _ := json.MarshalIndent(info, "", "  ")
 	return string(s)
 }
 
