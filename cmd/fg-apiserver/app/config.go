@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +24,7 @@ func onInitialize() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(defaultConfigName)
 	}
-	fmt.Println(viper.ConfigFileUsed())
+	// fmt.Println(viper.ConfigFileUsed())
 	setupEnvironmentVariables()
 
 	_ = viper.ReadInConfig()

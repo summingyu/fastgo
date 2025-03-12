@@ -14,8 +14,12 @@ const (
 	VersionNotSet  versionValue = 0
 	VersionEnabled versionValue = 1
 	VersionRaw     versionValue = 2
+	VersionJson    versionValue = 3
 )
-const strRawVersion string = "raw"
+const (
+	strRawVersion  string = "raw"
+	strJsonVersion string = "json"
+)
 
 func (v *versionValue) IsBoolFlag() bool {
 	return true
@@ -28,6 +32,9 @@ func (v *versionValue) Get() any {
 func (v *versionValue) Set(s string) error {
 	if s == strRawVersion {
 		*v = VersionRaw
+		return nil
+	} else if s == strJsonVersion {
+		*v = VersionJson
 		return nil
 	}
 	boolVal, err := strconv.ParseBool(s)
@@ -42,6 +49,8 @@ func (v *versionValue) Set(s string) error {
 func (v *versionValue) String() string {
 	if *v == VersionRaw {
 		return strRawVersion
+	} else if *v == VersionJson {
+		return strJsonVersion
 	}
 	return fmt.Sprintf("%v", bool(*v == VersionEnabled))
 }
@@ -74,6 +83,9 @@ func PrintAndExitIfRequested() {
 	// 检查版本标志的值并打印相应的信息
 	if *versionFlag == VersionRaw {
 		fmt.Printf("%s\n", Get().Text())
+		os.Exit(0)
+	} else if *versionFlag == VersionJson {
+		fmt.Printf("%s\n", Get().ToJSON())
 		os.Exit(0)
 	} else if *versionFlag == VersionEnabled {
 		fmt.Printf("%s\n", Get().String())
