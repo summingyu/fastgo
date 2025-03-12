@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/onexstack/fastgo/cmd/fg-apiserver/app/options"
+	"github.com/onexstack/fastgo/pkg/version"
 )
 
 var configFile string // 配置文件路径
@@ -43,12 +44,16 @@ func NewFastGOCommand() *cobra.Command {
 	// cobra 支持持久性标志(PersistentFlag)，该标志可用于它所分配的命令以及该命令下的每个子命令
 	// 推荐使用配置文件来配置应用，便于管理配置项
 	cmd.PersistentFlags().StringVarP(&configFile, "config", "c", filePath(), "Path to the fg-apiserver configuration file.")
+	// 添加 --version标志，用于打印版本信息
+	version.AddFlags(cmd.PersistentFlags())
 
 	return cmd
 }
 
 // run 是主运行逻辑，负责初始化日志、解析配置、校验选项并启动服务器。
 func run(opts *options.ServerOptions) error {
+	// 如果传入 --version 标志，则打印版本信息并退出
+	version.PrintAndExitIfRequested()
 	// 将 viper 中的配置解析到 opts.
 	if err := viper.Unmarshal(opts); err != nil {
 		return err
