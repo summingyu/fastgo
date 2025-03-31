@@ -17,5 +17,8 @@ mysql:
 
 log:
   format: text
-  level: info
-  output: log/fg-apiserver.log
+  level: debug
+  output: stdout
+
+# gin 服务监听地址，默认 0.0.0.0:6666
+addr: 127.0.0.1:8080
