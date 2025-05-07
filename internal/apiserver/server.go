@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/onexstack/fastgo/internal/pkg/core"
+	"github.com/onexstack/fastgo/internal/pkg/errorsx"
 	mw "github.com/onexstack/fastgo/internal/pkg/middleware"
 	genericoptions "github.com/onexstack/fastgo/pkg/options"
 )
@@ -32,11 +34,11 @@ func (cfg *Config) NewServer() (*Server, error) {
 	engine.Use(mws...)
 	// 注册404 Handler
 	engine.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusNotFound, gin.H{"code": "PageNotFound", "message": "Page not found."})
+		core.WriteResponse(c, errorsx.ErrNotFound.WithMessage("Page not found"), nil)
 	})
 	// 注册/healthz handler.
 	engine.GET("/healthz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		core.WriteResponse(c, nil, map[string]string{"status": "ok"})
 	})
 
 	httpsrv := &http.Server{Addr: cfg.Addr, Handler: engine}
