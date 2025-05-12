@@ -14,7 +14,7 @@ type ErrorResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
-func WriteResponse(c *gin.Context, err error, data any) {
+func WriteResponse(c *gin.Context, data any, err error) {
 	if err != nil {
 		errx := errorsx.FromError(err) // 提取错误详细信息
 		c.JSON(errx.Code, ErrorResponse{

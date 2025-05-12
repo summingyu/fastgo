@@ -1,7 +1,7 @@
 package conversion
 
 import (
-	"github.com/onexstack/onexstack/pkg/core"
+	"github.com/jinzhu/copier"
 
 	"github.com/onexstack/fastgo/internal/apiserver/model"
 
@@ -10,12 +10,12 @@ import (
 
 func UserodelToUserV1(userModel *model.User) *apiv1.User {
 	var protoUser apiv1.User
-	_ = core.CopyWithConverters(&protoUser, userModel)
+	_ = copier.Copy(&protoUser, userModel)
 	return &protoUser
 }
 
 func UserV1ToUserodel(protoUser *apiv1.User) *model.User {
 	var userModel model.User
-	_ = core.CopyWithConverters(&userModel, protoUser)
+	_ = copier.Copy(&userModel, protoUser)
 	return &userModel
 }

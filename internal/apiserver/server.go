@@ -11,6 +11,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/onexstack/fastgo/internal/apiserver/biz"
+	"github.com/onexstack/fastgo/internal/apiserver/handler"
+	"github.com/onexstack/fastgo/internal/apiserver/pkg/validation"
+	"github.com/onexstack/fastgo/internal/apiserver/store"
 	"github.com/onexstack/fastgo/internal/pkg/core"
 	"github.com/onexstack/fastgo/internal/pkg/errorsx"
 	mw "github.com/onexstack/fastgo/internal/pkg/middleware"
@@ -32,17 +36,52 @@ func (cfg *Config) NewServer() (*Server, error) {
 	// gin.Recovery() 中间件，用来捕获任何 panic，并恢复
 	mws := []gin.HandlerFunc{gin.Recovery(), mw.NoCache, mw.Cors, mw.RequestID()}
 	engine.Use(mws...)
+
+	// 初始化数据库连接
+	db, err := cfg.MySQLOptions.NewDB()
+	if err != nil {
+		return nil, err
+	}
+	store := store.NewStore(db)
+	cfg.InstallRESTAPI(engine, store)
+
+	httpsrv := &http.Server{Addr: cfg.Addr, Handler: engine}
+	return &Server{cfg: cfg, srv: httpsrv}, nil
+}
+
+func (cfg *Config) InstallRESTAPI(engine *gin.Engine, store store.IStore) {
 	// 注册404 Handler
 	engine.NoRoute(func(c *gin.Context) {
 		core.WriteResponse(c, errorsx.ErrNotFound.WithMessage("Page not found"), nil)
 	})
 	// 注册/healthz handler.
 	engine.GET("/healthz", func(c *gin.Context) {
-		core.WriteResponse(c, nil, map[string]string{"status": "ok"})
+		core.WriteResponse(c, map[string]string{"status": "ok"}, nil)
 	})
 
-	httpsrv := &http.Server{Addr: cfg.Addr, Handler: engine}
-	return &Server{cfg: cfg, srv: httpsrv}, nil
+	handler := handler.NewHandler(biz.NewBiz(store), validation.NewValidator(store))
+	authMiddlewares := []gin.HandlerFunc{}
+
+	v1 := engine.Group("/v1")
+	{
+		userv1 := v1.Group("/users")
+		{
+			userv1.POST("", handler.CreateUser)
+			userv1.PUT(":userID", handler.UpdateUser)
+			userv1.DELETE(":userID", handler.DeleteUser)
+			userv1.GET(":userID", handler.GetUser)
+			userv1.GET("", handler.ListUser)
+		}
+
+		postv1 := v1.Group("/posts", authMiddlewares...)
+		{
+			postv1.POST("", handler.CreatePost)
+			postv1.PUT(":postID", handler.UpdatePost)
+			postv1.DELETE(":postID", handler.DeletePost)
+			postv1.GET(":postID", handler.GetPost)
+			postv1.GET("", handler.ListPost)
+		}
+	}
 }
 
 func (s *Server) Run() error {
