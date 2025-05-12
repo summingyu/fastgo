@@ -4,6 +4,7 @@ import "context"
 
 type (
 	requestIDKey struct{}
+	userIDKey    struct{}
 )
 
 func WithRequestID(ctx context.Context, requestID string) context.Context {
@@ -13,5 +14,13 @@ func WithRequestID(ctx context.Context, requestID string) context.Context {
 func RequestID(ctx context.Context) string {
 	requestID, _ := ctx.Value(requestIDKey{}).(string)
 	return requestID
+}
 
+func WithUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, userIDKey{}, userID)
+}
+
+func UserID(ctx context.Context) string {
+	userID, _ := ctx.Value(userIDKey{}).(string)
+	return userID
 }
