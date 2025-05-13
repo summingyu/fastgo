@@ -65,20 +65,16 @@ type UpdateUserRequest struct {
 }
 
 // UpdateUserResponse 表示更新用户响应
-type UpdateUserResponse struct {
-}
+type UpdateUserResponse struct{}
 
 // DeleteUserRequest 表示删除用户请求
-type DeleteUserRequest struct {
-}
+type DeleteUserRequest struct{}
 
 // DeleteUserResponse 表示删除用户响应
-type DeleteUserResponse struct {
-}
+type DeleteUserResponse struct{}
 
 // GetUserRequest 表示获取用户请求
-type GetUserRequest struct {
-}
+type GetUserRequest struct{}
 
 // GetUserResponse 表示获取用户响应
 type GetUserResponse struct {

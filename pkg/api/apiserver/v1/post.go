@@ -53,8 +53,7 @@ type UpdatePostRequest struct {
 }
 
 // UpdatePostResponse 表示更新文章响应
-type UpdatePostResponse struct {
-}
+type UpdatePostResponse struct{}
 
 // DeletePostRequest 表示删除文章请求
 type DeletePostRequest struct {
@@ -63,8 +62,7 @@ type DeletePostRequest struct {
 }
 
 // DeletePostResponse 表示删除文章响应
-type DeletePostResponse struct {
-}
+type DeletePostResponse struct{}
 
 // GetPostRequest 表示获取文章请求
 type GetPostRequest struct {

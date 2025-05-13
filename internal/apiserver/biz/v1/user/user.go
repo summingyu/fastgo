@@ -26,8 +26,7 @@ type UserBiz interface {
 	UserExpansion
 }
 
-type UserExpansion interface {
-}
+type UserExpansion interface{}
 
 type userBiz struct {
 	store store.IStore

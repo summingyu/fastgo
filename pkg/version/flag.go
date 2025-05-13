@@ -16,6 +16,7 @@ const (
 	VersionRaw     versionValue = 2
 	VersionJson    versionValue = 3
 )
+
 const (
 	strRawVersion  string = "raw"
 	strJsonVersion string = "json"

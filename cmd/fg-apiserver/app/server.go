@@ -119,10 +119,10 @@ func initLog() {
 		w = os.Stdout
 	default:
 		dir := filepath.Dir(output)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			panic(err)
 		}
-		w, err = os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		w, err = os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666)
 		if err != nil {
 			panic(err)
 		}
