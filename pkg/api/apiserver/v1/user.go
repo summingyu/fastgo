@@ -97,3 +97,44 @@ type ListUserResponse struct {
 	// users 表示用户列表
 	Users []*User `json:"users"`
 }
+
+// LoginRequest 表示用户登录请求，包含用户名和密码信息。
+type LoginRequest struct {
+	// Username 表示用户登录使用的用户名。
+	Username string `json:"username"`
+	// Password 表示用户登录使用的密码。
+	Password string `json:"password"`
+}
+
+// LoginResponse 表示用户登录响应，包含生成的令牌和令牌过期时间。
+type LoginResponse struct {
+	// Token 表示用户登录成功后生成的 JWT 令牌。
+	Token string `json:"token"`
+	// ExpireAt 表示令牌的过期时间。
+	ExpireAt time.Time `json:"expireAt"`
+}
+
+// RefreshTokenRequest 表示刷新令牌请求，包含需要刷新的令牌信息。
+type RefreshTokenRequest struct {
+	// Token 表示需要刷新的 JWT 令牌。
+	Token string `json:"token"`
+}
+
+// RefreshTokenResponse 表示刷新令牌响应，包含新生成的令牌和新令牌的过期时间。
+type RefreshTokenResponse struct {
+	// Token 表示刷新后新生成的 JWT 令牌。
+	Token string `json:"token"`
+	// ExpireAt 表示新令牌的过期时间。
+	ExpireAt time.Time `json:"expireAt"`
+}
+
+// ChangePasswordRequest 表示修改密码请求，包含用户的旧密码和新密码信息。
+type ChangePasswordRequest struct {
+	// OldPassword 表示用户当前使用的旧密码。
+	OldPassword string `json:"oldPassword"`
+	// NewPassword 表示用户要设置的新密码。
+	NewPassword string `json:"newPassword"`
+}
+
+// ChangePasswordResponse 表示修改密码响应，目前无返回数据。
+type ChangePasswordResponse struct{}

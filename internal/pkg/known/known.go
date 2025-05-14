@@ -3,6 +3,8 @@ package known
 const (
 	// XRequestID 用来定义上下文中的键，代表请求 ID.
 	XRequestID = "x-Request-id"
+	// XUserID 用来定义上下文中的键，代表用户 ID.
+	XUserID = "x-User-id"
 )
 
 const (

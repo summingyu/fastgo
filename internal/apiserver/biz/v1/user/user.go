@@ -10,8 +10,11 @@ import (
 	"github.com/onexstack/fastgo/internal/apiserver/pkg/conversion"
 	"github.com/onexstack/fastgo/internal/apiserver/store"
 	"github.com/onexstack/fastgo/internal/pkg/contextx"
+	"github.com/onexstack/fastgo/internal/pkg/errorsx"
 	"github.com/onexstack/fastgo/internal/pkg/known"
 	apiv1 "github.com/onexstack/fastgo/pkg/api/apiserver/v1"
+	"github.com/onexstack/fastgo/pkg/auth"
+	"github.com/onexstack/fastgo/pkg/token"
 	"github.com/onexstack/onexstack/pkg/store/where"
 	"golang.org/x/sync/errgroup"
 )
@@ -26,7 +29,11 @@ type UserBiz interface {
 	UserExpansion
 }
 
-type UserExpansion interface{}
+type UserExpansion interface {
+	Login(ctx context.Context, rq *apiv1.LoginRequest) (*apiv1.LoginResponse, error)
+	RefreshToken(ctx context.Context, rq *apiv1.RefreshTokenRequest) (*apiv1.RefreshTokenResponse, error)
+	ChangePassword(ctx context.Context, rq *apiv1.ChangePasswordRequest) (*apiv1.ChangePasswordResponse, error)
+}
 
 type userBiz struct {
 	store store.IStore
@@ -35,9 +42,7 @@ type userBiz struct {
 var _ UserBiz = (*userBiz)(nil)
 
 func New(store store.IStore) UserBiz {
-	return &userBiz{
-		store: store,
-	}
+	return &userBiz{store: store}
 }
 
 // Create implements UserBiz.
@@ -73,6 +78,7 @@ func (b *userBiz) Get(ctx context.Context, rq *apiv1.GetUserRequest) (*apiv1.Get
 func (b *userBiz) List(ctx context.Context, rq *apiv1.ListUserRequest) (*apiv1.ListUserResponse, error) {
 	whr := where.P(int(rq.Offset), int(rq.Limit))
 	count, userList, err := b.store.User().List(ctx, whr)
+	slog.DebugContext(ctx, "List users", "count", count, "offset", rq.Offset, "limit", rq.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -90,13 +96,15 @@ func (b *userBiz) List(ctx context.Context, rq *apiv1.ListUserRequest) (*apiv1.L
 			case <-ctx.Done():
 				return nil
 			default:
-				count, _, err := b.store.Post().List(ctx, where.T(ctx))
+				count, _, err := b.store.Post().List(ctx, where.F("userID", contextx.UserID(ctx)))
 				if err != nil {
 					return err
 				}
+
 				converted := conversion.UserodelToUserV1(user)
 				converted.PostCount = count
 				m.Store(user.ID, converted)
+
 				return nil
 			}
 		})
@@ -138,4 +146,48 @@ func (b *userBiz) Update(ctx context.Context, rq *apiv1.UpdateUserRequest) (*api
 		return nil, err
 	}
 	return &apiv1.UpdateUserResponse{}, nil
+}
+
+func (b *userBiz) Login(ctx context.Context, rq *apiv1.LoginRequest) (*apiv1.LoginResponse, error) {
+	whr := where.F("username", rq.Username)
+	userM, err := b.store.User().Get(ctx, whr)
+	if err != nil {
+		return nil, errorsx.ErrUserNotFound
+	}
+
+	if err := auth.Compare(userM.Password, rq.Password); err != nil {
+		slog.ErrorContext(ctx, "Failed to compare password", "err", err)
+		return nil, errorsx.ErrPasswordInvalid
+	}
+	slog.DebugContext(ctx, "User login", "username", userM.Username, "userID", userM.UserID)
+	tokenStr, expireAt, err := token.Sign(userM.UserID)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to sign token", "err", err)
+		return nil, errorsx.ErrSignToken
+	}
+	return &apiv1.LoginResponse{Token: tokenStr, ExpireAt: expireAt}, nil
+}
+
+func (b *userBiz) RefreshToken(ctx context.Context, rq *apiv1.RefreshTokenRequest) (*apiv1.RefreshTokenResponse, error) {
+	tokenStr, expireAt, err := token.Sign(contextx.UserID(ctx))
+	if err != nil {
+		return nil, errorsx.ErrSignToken.WithMessage("%s", err.Error())
+	}
+	return &apiv1.RefreshTokenResponse{Token: tokenStr, ExpireAt: expireAt}, nil
+}
+
+func (b *userBiz) ChangePassword(ctx context.Context, rq *apiv1.ChangePasswordRequest) (*apiv1.ChangePasswordResponse, error) {
+	userM, err := b.store.User().Get(ctx, where.T(ctx))
+	if err != nil {
+		return nil, err
+	}
+	if err := auth.Compare(userM.Password, rq.OldPassword); err != nil {
+		slog.ErrorContext(ctx, "Failed to compare old password", "err", err)
+		return nil, errorsx.ErrPasswordInvalid
+	}
+	userM.Password, _ = auth.Encrypt(rq.NewPassword)
+	if err := b.store.User().Update(ctx, userM); err != nil {
+		return nil, err
+	}
+	return &apiv1.ChangePasswordResponse{}, nil
 }

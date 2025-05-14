@@ -17,13 +17,17 @@ import (
 	"github.com/onexstack/fastgo/internal/apiserver/store"
 	"github.com/onexstack/fastgo/internal/pkg/core"
 	"github.com/onexstack/fastgo/internal/pkg/errorsx"
+	"github.com/onexstack/fastgo/internal/pkg/known"
 	mw "github.com/onexstack/fastgo/internal/pkg/middleware"
 	genericoptions "github.com/onexstack/fastgo/pkg/options"
+	"github.com/onexstack/fastgo/pkg/token"
 )
 
 type Config struct {
 	MySQLOptions *genericoptions.MySQLOptions
 	Addr         string
+	JWTKey       string
+	Expiration   time.Duration
 }
 
 type Server struct {
@@ -32,6 +36,7 @@ type Server struct {
 }
 
 func (cfg *Config) NewServer() (*Server, error) {
+	token.Init(cfg.JWTKey, known.XUserID, cfg.Expiration)
 	engine := gin.New()
 	// gin.Recovery() 中间件，用来捕获任何 panic，并恢复
 	mws := []gin.HandlerFunc{gin.Recovery(), mw.NoCache, mw.Cors, mw.RequestID()}
@@ -60,13 +65,18 @@ func (cfg *Config) InstallRESTAPI(engine *gin.Engine, store store.IStore) {
 	})
 
 	handler := handler.NewHandler(biz.NewBiz(store), validation.NewValidator(store))
-	authMiddlewares := []gin.HandlerFunc{}
+
+	engine.POST("/login", handler.Login)
+	engine.PUT("/refresh-token", mw.Authn(), handler.RefreshToken)
+	authMiddlewares := []gin.HandlerFunc{mw.Authn()}
 
 	v1 := engine.Group("/v1")
 	{
 		userv1 := v1.Group("/users")
 		{
 			userv1.POST("", handler.CreateUser)
+			userv1.Use(authMiddlewares...)
+			userv1.PUT(":userID/change-password", handler.ChangePassword)
 			userv1.PUT(":userID", handler.UpdateUser)
 			userv1.DELETE(":userID", handler.DeleteUser)
 			userv1.GET(":userID", handler.GetUser)

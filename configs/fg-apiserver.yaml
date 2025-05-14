@@ -1,3 +1,8 @@
+# JWT 签名密钥
+jwt-key: Rtg8BPKNEf2mB4mgvKONGPZZQSaJWNLijxR42qRgq0iBb5
+# JWT Token 过期时间
+expiration: 1000h
+
 # MySQL 数据库相关配置
 mysql:
   # MySQL 机器 IP 和端口，默认 127.0.0.1:3306
@@ -21,4 +26,4 @@ log:
   output: stdout
 
 # gin 服务监听地址，默认 0.0.0.0:6666
-addr: 127.0.0.1:8080
+addr: 127.0.0.1:6666
