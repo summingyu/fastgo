@@ -42,14 +42,11 @@ func Parse(tokenString string, key string) (string, error) {
 			slog.Error("Parse token", "error", "unexpected signing method")
 			return nil, jwt.ErrSignatureInvalid
 		}
-		slog.Debug("Parse token", "key", []byte(key))
 		return []byte(key), nil
 	})
 	if err != nil {
-		slog.Debug("Parse token", "error", err)
 		return "", err
 	}
-	slog.Debug("Parse token", "token", token)
 	var identityKey string
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if key, exists := claims[config.identityKey]; exists {
@@ -58,11 +55,9 @@ func Parse(tokenString string, key string) (string, error) {
 			}
 		}
 	}
-	slog.Debug("identityKey", "value", identityKey)
 	if identityKey == "" {
 		return "", jwt.ErrSignatureInvalid
 	}
-	slog.Debug("identityKey", "value", identityKey)
 
 	return identityKey, nil
 }
@@ -74,7 +69,6 @@ func Parse(tokenString string, key string) (string, error) {
 func ParseRequest(c *gin.Context) (string, error) {
 	// 从请求头中获取 Authorization 字段的值
 	header := c.Request.Header.Get("Authorization")
-	slog.Debug("Authorization header", "header", header)
 
 	// 检查 Authorization 头的长度是否为 0
 	if len(header) == 0 {
@@ -85,8 +79,6 @@ func ParseRequest(c *gin.Context) (string, error) {
 	// 使用 fmt.Sscanf 从 Authorization 头中提取 token
 	var token string
 	fmt.Sscanf(header, "Bearer %s", &token)
-	slog.Debug("token", "value", token)
-	slog.Debug("config.key", "value", config.key)
 
 	// 调用 Parse 函数解析 token
 	return Parse(token, config.key)
@@ -105,7 +97,6 @@ func Sign(identityKey string) (string, time.Time, error) {
 	// - nbf（Not Before）: 令牌生效时间（当前时间戳）
 	// - iat（Issued At）: 令牌签发时间（当前时间戳）
 	// - exp（Expires At）: 令牌过期时间（当前时间 + 配置时长的时间戳）
-	slog.Debug("Sign token", "identityKey", identityKey, "config.identityKey", config.identityKey)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		config.identityKey: identityKey,
 		"nbf":              time.Now().Unix(),

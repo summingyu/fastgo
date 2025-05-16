@@ -126,7 +126,7 @@ func (b *userBiz) List(ctx context.Context, rq *apiv1.ListUserRequest) (*apiv1.L
 
 // Update implements UserBiz.
 func (b *userBiz) Update(ctx context.Context, rq *apiv1.UpdateUserRequest) (*apiv1.UpdateUserResponse, error) {
-	userM, err := b.store.User().Get(ctx, where.T(ctx))
+	userM, err := b.store.User().Get(ctx, where.F("userID", contextx.UserID(ctx)))
 	if err != nil {
 		return nil, err
 	}
